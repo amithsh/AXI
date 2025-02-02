@@ -1,0 +1,40 @@
+class axi_gen;
+	axi_tx tx;
+
+	task run();
+		case(common::test_name)
+			"SINGLE_WRITE_TEST":begin
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_ONLY awaddr==4; awlen==3; awsize==2; awburst==1; awvalid==1; awid==5;};
+				common::gen2bfm.put(tx);	
+			end
+
+			"MULTIPLE_WRITE_TEST":begin
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_ONLY awaddr==4; awlen==3; awsize==2; awburst==1; awvalid==1; awid==5;};
+				common::gen2bfm.put(tx);
+
+				//2nd transfer
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_ONLY awaddr==2; awlen==2; awsize==1; awburst==1; awvalid==1; awid==6;};
+				common::gen2bfm.put(tx);
+
+				
+
+			end
+
+			"SINGLE_WRITE_READ_TEST":begin
+
+			end
+
+			"MULTIPLE_WRITE_READ_TEST":begin
+
+			end
+
+			"OVERLAPPING_TRANSACTION_TEST":begin
+
+			end
+		endtask
+endclass
+
+		

@@ -1,0 +1,39 @@
+module top;
+bit aclk,aresetn;
+
+initial begin
+	aclk=0;
+	forever #5 aclk=~aclk;
+end
+
+initial begin
+	aresetn = 1;
+	repeat(2)@(posedge aclk);
+	aresetn = 0;
+end
+
+axi_interface pvif(aclk,aresetn);
+
+axi_env e;
+
+initial begin
+	e=new();
+	e.run();
+end
+
+initial begin
+	common::vif=pvif;
+	common::testname = WRITE_ONLY;
+end
+
+initial begin
+	#500;
+	$finish;
+end
+endmodule
+
+
+
+
+
+

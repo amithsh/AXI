@@ -1,0 +1,15 @@
+class axi_env;
+
+	axi_gen gen;
+	axi_bfm bfm;
+	task run();
+		fork
+			gen=new();
+			bfm=new();
+			bfm.run();
+			gen.run();
+		join
+
+	endtask
+endclass
+
