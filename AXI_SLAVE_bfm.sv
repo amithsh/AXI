@@ -48,6 +48,8 @@ forever begin
             end
     end
 
+
+
     else begin
         if(svif.awvalid==0)
                     svif.awready <=0;
@@ -89,7 +91,7 @@ forever begin
                         if(svif.wstrb[i]==1)begin
                             //reversed_index = (data_in_bytes - 1 - j) * 8;
     				        mem[wr_tx[svif.wid].awaddr+w_count] = svif.wdata[i*8 +: 8];
-                            $display("data in mem %0h",mem[wr_tx[svif.wid].awaddr+w_count]);
+                           // $display("data in mem %0h",mem[wr_tx[svif.wid].awaddr+w_count]);
                             w_count = w_count+1;
                         end
                     end
@@ -148,7 +150,9 @@ forever begin
         if(svif.rready==1)begin
             svif.rvalid <=1;
             rd_tx.first(temp_id);
-            svif.rdata = 0;
+            
+            
+            
             if(rd_tx[temp_id].arburst==1)begin //burst==1 indicates the transfer is the increment type
                 
                 for(int i=0; i<=rd_tx[temp_id].arlen; i++)begin
@@ -157,6 +161,7 @@ forever begin
                     rd_tx[temp_id].araddr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr % 2** rd_tx[temp_id].arsize);
                     
                     
+                    svif.rdata <= 0; 
                     for(int i=0; i<(2** rd_tx[temp_id].arsize); i++)begin
                         svif.rdata[i*8 +: 8] = mem[rd_tx[temp_id].araddr+r_count];
                         r_count = r_count +1;

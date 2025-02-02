@@ -10,6 +10,8 @@ class axi_gen;
 				common::gen2bfm.put(tx);	
 			end
 
+
+
 		
 			"MULTIPLE_WRITE_TEST":begin
 				//1st transfer
@@ -34,14 +36,14 @@ class axi_gen;
 
 			"MULTIPLE_WRITE_READ_TEST":begin
 				//aligned address and non-narrow transfer
-				tx=new();
-	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==0; awlen==3; awsize==2; awburst==1; wid==awid; araddr==0; arlen==3; arsize==2; arburst==1; };
-	            common::gen2bfm.put(tx);
+				// tx=new();
+	            // tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==0; awlen==3; awsize==2; awburst==1; wid==awid; araddr==0; arlen==3; arsize==2; arburst==1; };
+	            // common::gen2bfm.put(tx);
 
 
 				//aligned and narrow transfer
 				tx=new();
-	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==0; awlen==3; awsize==1; awburst==1; wid==awid; araddr==0; arlen==3; arsize==1; arburst==1; };
+	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==1; awlen==3; awsize==1; awburst==1; wid==awid; araddr==0; arlen==3; arsize==1; arburst==1; };
 	            common::gen2bfm.put(tx);
 
 				//non-aligned and non-narrow transfer
@@ -51,7 +53,7 @@ class axi_gen;
 				
 				//non-aligned and narrow transfer
 				tx=new();
-	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==2; awlen==3; awsize==1; awburst==1; wid==awid; araddr==2; arlen==3; arsize==1; arburst==1; };
+	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==3; awlen==3; awsize==1; awburst==1; wid==awid; araddr==2; arlen==3; arsize==1; arburst==1; };
 	            common::gen2bfm.put(tx);	
 
 			end

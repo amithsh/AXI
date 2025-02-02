@@ -10,6 +10,7 @@ class axi_bfm;
 	int wstrb_bit;
 	int a[int] ;
 	int b;
+	int c;
 
 	task run();
 		mvif = common::vif;
@@ -99,6 +100,7 @@ class axi_bfm;
 
 		//generating the multiple transafers
 		for(int i=0; i<=wr_tx[tx.wid].awlen; i++)begin
+
 			mvif.wdata <= tx.wdata.pop_back();//32bit random data
 			mvif.wid <= tx.wid;//0
 			mvif.wvalid <= 1;
@@ -114,11 +116,12 @@ class axi_bfm;
 			*/
 
 			data_size_in_bytes = ($size(mvif.wdata)/8);//4
-			each_beat_active_bytes = (2**wr_tx[tx.wid].awsize);//4
+			each_beat_active_bytes = (2**wr_tx[tx.wid].awsize);//2
 			//offset is used for narrow transfer
-			offset_addr = wr_tx[tx.wid].awaddr % data_size_in_bytes;//2%4 = 2
+			offset_addr = wr_tx[tx.wid].awaddr % data_size_in_bytes;//1
 			aligned_addr = wr_tx[tx.wid].awaddr - (wr_tx[tx.wid].awaddr % (2 ** wr_tx[tx.wid].awsize));// 2-(2%4)=0
 
+			c = wr_tx[tx.wid].awaddr - aligned_addr;
 			tx.wstrb =0;
 			//check for aligned address
 			if(wr_tx[tx.wid].awaddr % each_beat_active_bytes ==0)begin
@@ -129,7 +132,11 @@ class axi_bfm;
 			end 
 			//check for unaligned
 			if(wr_tx[tx.wid].awaddr % each_beat_active_bytes !=0)begin
-				for(int j=offset_addr; j<(aligned_addr+each_beat_active_bytes); j++)begin
+				        if(wr_tx[tx.wid].awsize==1)
+							c=0;
+						else
+							c=1;
+				for(int j=offset_addr; j<(wr_tx[tx.wid].awsize + offset_addr + c); j++)begin
 					tx.wstrb[j] = 'b1;
 				end
 			end
