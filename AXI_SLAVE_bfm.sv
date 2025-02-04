@@ -14,6 +14,10 @@ int r_count;
 int data_size;
 int data_in_bytes;
 int reversed_index;
+int data_size_in_bytes;
+int each_beat_active_bytes;
+int offset_addr;
+int aligned_addr;
 
 axi_tx wr_tx[int];//assosiative array,of type transaction class stores mainly on the ID incomming
 axi_tx rd_tx[int];//for storing read address & control information
@@ -91,7 +95,7 @@ forever begin
                         if(svif.wstrb[i]==1)begin
                             //reversed_index = (data_in_bytes - 1 - j) * 8;
     				        mem[wr_tx[svif.wid].awaddr+w_count] = svif.wdata[i*8 +: 8];
-                           // $display("data in mem %0h",mem[wr_tx[svif.wid].awaddr+w_count]);
+                           $display("data in mem %0h | data address=%0d | time=%0t",  mem[wr_tx[svif.wid].awaddr+w_count],  wr_tx[svif.wid].awaddr+w_count,  $time);
                             w_count = w_count+1;
                         end
                     end
@@ -150,6 +154,7 @@ forever begin
         if(svif.rready==1)begin
             svif.rvalid <=1;
             rd_tx.first(temp_id);
+            $display("temp_id=%0d",temp_id);
             
             
             
@@ -158,15 +163,38 @@ forever begin
                 for(int i=0; i<=rd_tx[temp_id].arlen; i++)begin
                    r_count = 0;
                     //unaligned address to aligned address
-                    rd_tx[temp_id].araddr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr % 2** rd_tx[temp_id].arsize);
                     
-                    
-                    svif.rdata <= 0; 
-                    for(int i=0; i<(2** rd_tx[temp_id].arsize); i++)begin
-                        svif.rdata[i*8 +: 8] = mem[rd_tx[temp_id].araddr+r_count];
-                        r_count = r_count +1;
+                     data_size_in_bytes  = $size(svif.rdata)/8;
+                    each_beat_active_bytes = 2**rd_tx[temp_id].arsize;
+                    offset_addr = rd_tx[temp_id].araddr % data_size_in_bytes;
+                    aligned_addr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr %(2** rd_tx[temp_id].arsize));
+                   
+
+                    svif.rdata = 0; 
+
+                    //aligned
+                    if((rd_tx[temp_id].araddr % data_size_in_bytes) ==0)begin
+                        for(int j=0; j<each_beat_active_bytes; j++)begin
+                            svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
+                            
+                            r_count = r_count+1;
+                            $display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                        end
                     end
-                    rd_tx[temp_id].araddr = rd_tx[temp_id].araddr + 2** rd_tx[temp_id].arsize;
+
+
+                    //unaligned
+                    if((rd_tx[temp_id].araddr % data_size_in_bytes) !=0)begin
+                        for(int j=offset_addr; j<(each_beat_active_bytes + offset_addr); j++)begin
+                            svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
+                            r_count = r_count+1;
+                            $display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                        end
+                    end
+
+
+                   
+                    rd_tx[temp_id].araddr = aligned_addr + 2** rd_tx[temp_id].arsize;
                     svif.rid = temp_id;
                     svif.rresp = 'b00;
                     if(i==rd_tx[temp_id].arlen)
@@ -176,14 +204,14 @@ forever begin
                     if(svif.arvalid==1)begin
                         svif.arready=1;
                         rd_tx[svif.arid] = new();
-                        wr_tx[svif.arid].awaddr = svif.araddr;
-                        wr_tx[svif.arid].awlen = svif.arlen;
-                        wr_tx[svif.arid].awsize = svif.arsize;
-                        wr_tx[svif.arid].awburst = svif.arburst;
-                        wr_tx[svif.arid].awprot = svif.arprot;
-                        wr_tx[svif.arid].awcache = svif.arcache;
-                        wr_tx[svif.arid].awlock = svif.arlock;
-                        wr_tx[svif.arid].awid = svif.arid;
+                        rd_tx[svif.arid].araddr = svif.araddr;
+                        rd_tx[svif.arid].arlen = svif.arlen;
+                        rd_tx[svif.arid].arsize = svif.arsize;
+                        rd_tx[svif.arid].arburst = svif.arburst;
+                        rd_tx[svif.arid].arprot = svif.arprot;
+                        rd_tx[svif.arid].arcache = svif.arcache;
+                        rd_tx[svif.arid].arlock = svif.arlock;
+                        rd_tx[svif.arid].arid = svif.arid;
                     end
                     svif.rlast<=0;
                 end
