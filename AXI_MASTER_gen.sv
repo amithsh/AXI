@@ -8,10 +8,21 @@ class axi_gen;
 				tx=new();
 				tx.randomize() with {wr_rd==WRITE_ONLY; awaddr==4; awlen==3; awsize==2; awburst==1; wid==awid;};
 				common::gen2bfm.put(tx);	
+
+				// tx=new();
+				// tx.randomize() with {wr_rd==WRITE_ONLY; awaddr==12; awlen==3; awsize==2; awburst==1; wid==awid;};
+				// common::gen2bfm.put(tx);
 			end
 
 
 
+			"SINGLE_WRITE_READ_TEST":begin
+				//write transaction
+				tx=new();
+	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==2; awlen==3; awsize==2; awburst==1; wid==awid; araddr==2; arlen==3; arsize==2; arburst==1; };
+	            common::gen2bfm.put(tx);
+
+			end
 		
 			"MULTIPLE_WRITE_TEST":begin
 				//1st transfer
@@ -26,13 +37,6 @@ class axi_gen;
 
 			end
 
-			"SINGLE_WRITE_READ_TEST":begin
-				//write transaction
-				tx=new();
-	            tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==2; awlen==3; awsize==2; awburst==1; wid==awid; araddr==2; arlen==3; arsize==2; arburst==1; };
-	            common::gen2bfm.put(tx);
-
-			end
 
 			"MULTIPLE_WRITE_READ_TEST":begin
 				//aligned address and non-narrow transfer
@@ -58,8 +62,43 @@ class axi_gen;
 
 			end
 
+			"SINGLE_READ_PARALLEL_WRITE":begin
+				//aligned address with normal transfer
+
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_ONLY; awaddr==0; awlen==3; awsize==2; awburst==1; wid==awid;};
+				common::gen2bfm.put(tx);	
+
+				//sending unaligned address with normal transfer
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_PARALLEL_READ; awaddr==10; awlen==3; awsize==2; awburst==1; wid==awid; araddr==0; arlen==3; arsize==2; arburst==1; };
+				common::gen2bfm.put(tx);
+			end
+
+			//"MULTIPLE_PARALLEL_WRITE_READ"
+
 			"OVERLAPPING_TRANSACTION_TEST":begin
-				
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_ONLY; awaddr==0; awlen==3; awsize==2; awburst==1; awid==3; awvalid==1; wvalid==0; };
+				common::gen2bfm.put(tx);
+
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_ONLY; awaddr==8; awlen==3; awsize==2; awburst==1; awid ==4; wid==3; awvalid==1; wvalid==1; };
+				common::gen2bfm.put(tx);
+
+				tx=new();
+				tx.randomize() with {wr_rd==READ_ONLY; araddr==0; arlen==3; arsize==2; arburst==1; };
+				common::gen2bfm.put(tx);
+			end
+
+			"wrap_transaction_with_aligned_addr":begin
+				// tx=new();
+				// tx.randomize() with {wr_rd==WRITE_ONLY; awaddr==4; awlen==3; awsize==2; awburst==2; wid==awid; };
+				// common::gen2bfm.put(tx);
+
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==8; awlen==3; awsize==2; awburst==2; wid==awid; araddr==8; arlen==3; arsize==2; arburst==2;};
+				common::gen2bfm.put(tx);
 			end
 		endcase
 		endtask

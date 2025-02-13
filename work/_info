@@ -25,8 +25,8 @@ w1738059204
 Z4 FAXI_MASTER_interface.sv
 L0 1
 Z5 OL;L;10.6c;65
-Z6 !s108 1738641803.000000
-Z7 !s107 AXI_MASTER_top.sv|AXI_MASTER_env.sv|AXI_SLAVE_bfm.sv|AXI_MASTER_bfm.sv|AXI_MASTER_gen.sv|AXI_MASTER_tx.sv|AXI_common.sv|AXI_MASTER_interface.sv|run.sv|
+Z6 !s108 1739437611.000000
+Z7 !s107 AXI_MASTER_top.sv|AXI_MASTER_env.sv|AXI_MASTER_SCOREBOARD.sv|AXI_MASTER_MONITOR.sv|AXI_SLAVE_bfm.sv|AXI_MASTER_bfm.sv|AXI_MASTER_gen.sv|AXI_MASTER_tx.sv|AXI_common.sv|AXI_MASTER_interface.sv|run.sv|
 Z8 !s90 -reportprogress|300|run.sv|
 !i113 0
 Z9 o-L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
@@ -34,17 +34,17 @@ Z10 tCvgOpt 0
 Xrun_sv_unit
 !s115 axi_interface
 R1
-V:4FbaZ:dWA7j]8DQg>H7U1
+VG[`zBEQY=>TfT4KRWX]4;2
 r1
 !s85 0
 31
 !i10b 1
-!s100 oCM8KflWjLm;gjJAf:4DX2
-I:4FbaZ:dWA7j]8DQg>H7U1
+!s100 8P5L81[=P^i1M@7K_n?I42
+IG[`zBEQY=>TfT4KRWX]4;2
 !i103 1
 S1
 R0
-w1738641797
+w1739437608
 8run.sv
 Frun.sv
 R4
@@ -53,6 +53,8 @@ FAXI_MASTER_tx.sv
 FAXI_MASTER_gen.sv
 FAXI_MASTER_bfm.sv
 FAXI_SLAVE_bfm.sv
+FAXI_MASTER_MONITOR.sv
+FAXI_MASTER_SCOREBOARD.sv
 FAXI_MASTER_env.sv
 Z11 FAXI_MASTER_top.sv
 L0 1
@@ -65,18 +67,18 @@ R9
 R10
 vtop
 R1
-DXx4 work 11 run_sv_unit 0 22 :4FbaZ:dWA7j]8DQg>H7U1
+DXx4 work 11 run_sv_unit 0 22 G[`zBEQY=>TfT4KRWX]4;2
 R2
 r1
 !s85 0
 31
 !i10b 1
-!s100 B9P^DXnjnCloJH[kV_5Gz0
-IG9;K3913eV;oiL[bT@>ZC0
+!s100 3H<=kmcl:9BC4^3L_Y[3`0
+Ib<CM;aBCXDd1h6hk@`bam0
 R3
 S1
 R0
-w1738490420
+w1739365463
 8AXI_MASTER_top.sv
 R11
 L0 1

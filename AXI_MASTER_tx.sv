@@ -29,7 +29,7 @@ class axi_tx;
 	rand bit wvalid;
 	bit wready;
 	//write response channel
-	rand bit ready;
+	rand bit bready;
 	bit bvalid;
 	bit[3:0]bid;
 	bit[1:0]bresp;

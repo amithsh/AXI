@@ -22,6 +22,15 @@ int aligned_addr;
 axi_tx wr_tx[int];//assosiative array,of type transaction class stores mainly on the ID incomming
 axi_tx rd_tx[int];//for storing read address & control information
 
+//wrap related internal variables
+int j;
+int wrap_boundry_addr;
+int upper_boundry_addr;
+
+int rd_j;
+int rd_wrap_boundry_addr;
+int rd_upper_boundry_addr;
+
 task run();
 svif = common::vif;
 forever begin
@@ -86,7 +95,8 @@ forever begin
 
             data_size = $size(svif.wdata);
             data_in_bytes = data_size/8;
-
+            
+            //increment transaction
             if(wr_tx[svif.wid].awburst ==1)begin
                 @(posedge svif.aclk);
                 for(int i=0; i<=wr_tx[svif.wid].awlen; i++)begin
@@ -95,7 +105,7 @@ forever begin
                         if(svif.wstrb[i]==1)begin
                             //reversed_index = (data_in_bytes - 1 - j) * 8;
     				        mem[wr_tx[svif.wid].awaddr+w_count] = svif.wdata[i*8 +: 8];
-                           $display("data in mem %0h | data address=%0d | time=%0t",  mem[wr_tx[svif.wid].awaddr+w_count],  wr_tx[svif.wid].awaddr+w_count,  $time);
+                           //$display("data in mem %0h | data address=%0d | time=%0t",  mem[wr_tx[svif.wid].awaddr+w_count],  wr_tx[svif.wid].awaddr+w_count,  $time);
                             w_count = w_count+1;
                         end
                     end
@@ -131,6 +141,85 @@ forever begin
 
                 end//end of awlen loop
             end// end of awburst loop
+
+            //wrap transaction
+            if(wr_tx[svif.wid].awburst==2)begin
+                
+                //1.check for aligned and unaligned address
+                if(wr_tx[svif.wid].awaddr % 2** wr_tx[svif.wid].awsize == 0)begin
+                    //2.find out the number of transfers (only 2 ,4 ,8, 16 are allowed)
+                    if(wr_tx[svif.wid].awlen==1 || wr_tx[svif.wid].awlen==3 || wr_tx[svif.wid].awlen==7 || wr_tx[svif.wid].awlen==15 ) begin
+                        //3.find out the wrap boundry
+                        j = wr_tx[svif.wid].awaddr / ((wr_tx[svif.wid].awlen+1) * (2 ** wr_tx[svif.wid].awsize));
+                        $display("j=%0d",j);
+                        wrap_boundry_addr = j * (wr_tx[svif.wid].awlen+1 * (2 ** wr_tx[svif.wid].awsize));
+                        //4.find out the upper boundry
+                        upper_boundry_addr = wrap_boundry_addr + ((wr_tx[svif.wid].awlen+1) * (2 ** wr_tx[svif.wid].awsize));
+                        $display("wrap_boundry addr = %0d || upper_boundry_addr = %0d",wrap_boundry_addr,upper_boundry_addr);
+                        @(posedge svif.aclk);
+                        
+                        for(int i=0; i<=wr_tx[svif.wid].awlen; i++)begin
+                            $display("slave bfm WRAP TRANSACTION numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,wr_tx[svif.wid].awaddr,svif.wdata,$time);
+                            w_count=0;
+                            for(int j=0; j<data_in_bytes; j++)begin
+                                if(svif.wstrb[i]==1)begin
+                                    mem[wr_tx[svif.wid].awaddr+w_count] = svif.wdata[j*8 +: 8];
+                                    //$display("mem_addr = %0d | svif.wdata = %0h| w_count=%0d",wr_tx[svif.wid].awaddr+w_count,mem[wr_tx[svif.wid].awaddr+w_count],w_count);
+                                    w_count = w_count+1;
+                                end
+                            end
+
+                        wr_tx[svif.wid].awaddr = wr_tx[svif.wid].awaddr - (wr_tx[svif.wid].awaddr % 2 ** wr_tx[svif.wid].awsize );
+
+                        wr_tx[svif.wid].awaddr = wr_tx[svif.wid].awaddr + 2**wr_tx[svif.wid].awsize;
+
+
+                        if(wr_tx[svif.wid].awaddr == upper_boundry_addr )begin
+                            wr_tx[svif.wid].awaddr = wrap_boundry_addr;
+
+                        end
+
+                        @(posedge svif.aclk);
+
+                        if(svif.awvalid ==1)begin
+                         svif.awready<=1;
+                         wr_tx[svif.awid] = new();
+                         wr_tx[svif.awid].awaddr = svif.awaddr;
+                         wr_tx[svif.awid].awlen = svif.awlen;
+                         wr_tx[svif.awid].awsize = svif.awsize;
+                         wr_tx[svif.awid].awburst = svif.awburst;
+                         wr_tx[svif.awid].awprot = svif.awprot;
+                         wr_tx[svif.awid].awcache = svif.awcache;
+                         wr_tx[svif.awid].awlock = svif.awlock;
+                         wr_tx[svif.awid].awid = svif.awid;
+                    end
+
+                    if(svif.bready==1)begin
+                        if(svif.wlast==1)begin
+                            svif.bvalid<=1;
+                            svif.bid<=svif.wid;
+                            svif.bresp<=0;
+                        end
+                    end
+                end   
+                end
+                else begin
+                     if(svif.wlast==1)begin
+                            svif.bvalid<=1;
+                            svif.bid<=svif.wid;
+                            svif.bresp<='b10;
+                        end
+                end
+                
+                end
+                else begin
+                     if(svif.wlast==1)begin
+                            svif.bvalid<=1;
+                            svif.bid<=svif.wid;
+                            svif.bresp<='b10;
+                        end
+                end
+            end
         end//end of wvalid loop
 
 
@@ -216,6 +305,102 @@ forever begin
                     svif.rlast<=0;
                 end
             end
+
+            //wrap transaction of read
+            if(rd_tx[temp_id].arburst==2)begin
+                
+                //1.check for aligned and unaligned address
+                if(rd_tx[temp_id].araddr % 2** wr_tx[temp_id].arsize == 0)begin
+                    //2.find out the number of transfers (only 2 ,4 ,8, 16 are allowed)
+                    if(rd_tx[temp_id].arlen==1 || rd_tx[temp_id].arlen==3 || rd_tx[temp_id].arlen==7 || rd_tx[temp_id].arlen==15 ) begin
+                        //3.find out the wrap boundry
+                        rd_j = rd_tx[temp_id].araddr / ((rd_tx[temp_id].arlen+1) * (2 ** rd_tx[temp_id].arsize));
+                        $display("j=%0d",j);
+                        rd_wrap_boundry_addr = rd_j * ((rd_tx[temp_id].arlen+1) * (2 ** rd_tx[temp_id].arsize));
+                        //4.find out the upper boundry
+                        rd_upper_boundry_addr = rd_wrap_boundry_addr + ((rd_tx[temp_id].arlen+1) * (2 ** rd_tx[temp_id].arsize));
+                        $display("wrap_boundry addr = %0d || upper_boundry_addr = %0d",rd_wrap_boundry_addr,rd_upper_boundry_addr);
+                        @(posedge svif.aclk);
+                        
+                    for(int i=0; i<=rd_tx[temp_id].arlen; i++)begin
+                   
+                    r_count = 0;
+                    //unaligned address to aligned address
+                    
+                    data_size_in_bytes  = $size(svif.rdata)/8;
+                    each_beat_active_bytes = 2**rd_tx[temp_id].arsize;
+                    offset_addr = rd_tx[temp_id].araddr % data_size_in_bytes;
+                    aligned_addr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr %(2** rd_tx[temp_id].arsize));
+                   
+
+                    svif.rdata = 0; 
+
+                    //aligned
+                    if((rd_tx[temp_id].araddr % data_size_in_bytes) ==0)begin
+                        for(int j=0; j<each_beat_active_bytes; j++)begin
+                            svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
+                            
+                            r_count = r_count+1;
+                            $display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                        end
+                    end
+
+
+                    //unaligned
+                    if((rd_tx[temp_id].araddr % data_size_in_bytes) !=0)begin
+                        for(int j=offset_addr; j<(each_beat_active_bytes + offset_addr); j++)begin
+                            svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
+                            r_count = r_count+1;
+                            $display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                        end
+                    end
+                     $display("slave bfm WRAP TRANSACTION numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,rd_tx[temp_id].araddr,svif.rdata,$time);
+
+
+                   
+                    rd_tx[temp_id].araddr = aligned_addr + 2** rd_tx[temp_id].arsize;
+                    if(rd_tx[temp_id].araddr == rd_upper_boundry_addr)begin
+                        rd_tx[temp_id].araddr = rd_wrap_boundry_addr;
+                    end
+                    svif.rid = temp_id;
+                    svif.rresp = 'b00;
+                    if(i==rd_tx[temp_id].arlen)
+                        svif.rlast<=1;
+                    @(posedge svif.aclk);
+                    //read address channel
+                    if(svif.arvalid==1)begin
+                        svif.arready=1;
+                        rd_tx[svif.arid] = new();
+                        rd_tx[svif.arid].araddr = svif.araddr;
+                        rd_tx[svif.arid].arlen = svif.arlen;
+                        rd_tx[svif.arid].arsize = svif.arsize;
+                        rd_tx[svif.arid].arburst = svif.arburst;
+                        rd_tx[svif.arid].arprot = svif.arprot;
+                        rd_tx[svif.arid].arcache = svif.arcache;
+                        rd_tx[svif.arid].arlock = svif.arlock;
+                        rd_tx[svif.arid].arid = svif.arid;
+                    end
+                    svif.rlast<=0;
+                end
+                end
+                else begin
+                     if(svif.wlast==1)begin
+                            svif.bvalid<=1;
+                            svif.bid<=svif.wid;
+                            svif.bresp<='b10;
+                        end
+                end
+                
+                end
+                else begin
+                     if(svif.wlast==1)begin
+                            svif.bvalid<=1;
+                            svif.bid<=svif.wid;
+                            svif.bresp<='b10;
+                        end
+                end
+            end
+            
             rd_tx.delete(temp_id);
         end
     end

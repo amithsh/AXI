@@ -4,6 +4,8 @@
 `include "AXI_MASTER_gen.sv"
 `include "AXI_MASTER_bfm.sv"
 `include "AXI_SLAVE_bfm.sv"
+`include "AXI_MASTER_MONITOR.sv"
+`include "AXI_MASTER_SCOREBOARD.sv"
 `include "AXI_MASTER_env.sv"
 `include "AXI_MASTER_top.sv"
 

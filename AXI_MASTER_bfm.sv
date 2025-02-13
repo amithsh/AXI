@@ -52,9 +52,22 @@ class axi_bfm;
 
 		//write only channel
 		if(tx.wr_rd == WRITE_ONLY)begin
-			write_address_channel();
-			write_data_channel();
-			write_response_channel();
+			if(common::out_of_order || common::overlaping)begin
+				if(tx.awvalid==1 && tx.wvalid==0)begin
+					write_address_channel();
+				end
+				else if(tx.wvalid==1 )begin
+					$display("write data channel");
+					write_data_channel();
+					write_response_channel();
+				end
+			end
+			else begin
+				$display("write address inside else");
+				write_address_channel();
+				write_data_channel();
+				write_response_channel();
+			end
 		end
 		end
 
@@ -85,8 +98,6 @@ class axi_bfm;
 		wr_tx[mvif.awid].awsize = mvif.awsize;
 		wr_tx[mvif.awid].awburst = mvif.awburst;
 		
-		
-
 		//wait one clock cycle and then make the valid=0
 		@(posedge mvif.aclk);
 		mvif.awvalid<=0;
@@ -94,13 +105,24 @@ class axi_bfm;
 
 	//write data channel
 	task write_data_channel();
-		write_address_channel();
+		//write_address_channel();
 		mvif.bready<=1;
 
 
 		//generating the multiple transafers
 		for(int i=0; i<=wr_tx[tx.wid].awlen; i++)begin
 
+			fork
+		
+			begin
+			if(common::overlaping==1)begin
+				if(tx.awvalid==1)begin
+					write_address_channel();
+				end
+			end
+			end
+
+			begin
 			mvif.wdata <= tx.wdata.pop_back();//32bit random data
 			mvif.wid <= tx.wid;//0
 			mvif.wvalid <= 1;
@@ -152,6 +174,10 @@ class axi_bfm;
 			@(posedge mvif.aclk);
 			mvif.wlast<=0;
 			mvif.wvalid<=0;
+			end
+
+			join
+
 		end
 	endtask
 
