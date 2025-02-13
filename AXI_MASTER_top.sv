@@ -20,9 +20,12 @@ axi_env e;
 initial begin
 	e=new();
 	common::vif=pvif;
-	common::testname = "SINGLE_WRITE_TEST";
+	
+	common::testname = "SINGLE_WRITE_READ_TEST";
 	e.run();
 end
+
+
 
 
 initial begin

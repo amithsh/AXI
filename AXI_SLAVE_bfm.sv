@@ -243,7 +243,7 @@ forever begin
         if(svif.rready==1)begin
             svif.rvalid <=1;
             rd_tx.first(temp_id);
-            $display("temp_id=%0d",temp_id);
+            //$display("temp_id=%0d",temp_id);
             
             
             
@@ -267,7 +267,7 @@ forever begin
                             svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
                             
                             r_count = r_count+1;
-                            $display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                           // $display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
                         end
                     end
 
@@ -277,7 +277,7 @@ forever begin
                         for(int j=offset_addr; j<(each_beat_active_bytes + offset_addr); j++)begin
                             svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
                             r_count = r_count+1;
-                            $display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                            //$display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
                         end
                     end
 

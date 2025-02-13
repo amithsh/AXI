@@ -4,6 +4,7 @@
         axi_tx wr_tx[int];
         axi_tx rd_tx[int];
         int temp_wdata;
+        int temp_rdata;
         int w_count;
         int r_count;
         reg[3:0]temp_id;
@@ -24,7 +25,7 @@
                 common::mon2sco.get(tx);
                 //write address channel
                 
-                if(vif.awvalid==1 && vif.awready==1)begin
+                if(tx.awvalid==1 && tx.awready==1)begin
                     wr_tx[tx.awid] = new();
                     wr_tx[tx.awid].awaddr = tx.awaddr;
                     wr_tx[tx.awid].awsize = tx.awsize;
@@ -34,7 +35,7 @@
 
                 //write data channel
                 
-                if(vif.wvalid==1 && vif.wready==1)begin
+                if(tx.wvalid==1 && tx.wready==1)begin
                     
                     //$display("write data address=%0h",wr_tx[tx.awid].awaddr);
                     w_count = 0;
@@ -58,53 +59,68 @@
 
 
                 //read address
-                if(vif.arvalid==1 && vif.arready==1)begin
-
+                if(tx.arvalid==1 && tx.arready==1)begin
                     rd_tx[tx.arid] = new();
                     rd_tx[tx.arid].araddr = tx.araddr;
                     rd_tx[tx.arid].arsize = tx.arsize;
                     rd_tx[tx.arid].arburst = tx.arburst;
+                    //$display("SCOREBOARD entering the read address and got the read address");
+                    
 
                 end
 
-                if(vif.rvalid ==1 && vif.rready==1)begin
-                    
+                if(tx.rvalid ==1 && tx.rready==1)begin
+                    //$display("SCOREBOARD entering the read data and got the read data");
                     rd_tx.first(temp_id);
+                    //$display("araddr=%0d", rd_tx[temp_id].araddr);
+                    
                     if(rd_tx[temp_id].arburst ==1) begin
 
                         r_count = 0;
                         //unaligned address to aligned address
                         
+                        aligned_addr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr %(2** rd_tx[temp_id].arsize));
                         data_size_in_bytes  = $size(tx.rdata)/8;
                         each_beat_active_bytes = 2**rd_tx[temp_id].arsize;
                         offset_addr = rd_tx[temp_id].araddr % data_size_in_bytes;
-                        aligned_addr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr %(2** rd_tx[temp_id].arsize));
+                        //$display("rdata =%0h time=%0t",tx.rdata,$time() );
 
                         //aligned
-                        if((rd_tx[temp_id].araddr % data_size_in_bytes) ==0)begin
+                        if((rd_tx[temp_id].araddr % data_size_in_bytes) == 0)begin
+                            temp_rdata = tx.rdata;
                             for(int j=0; j<each_beat_active_bytes; j++)begin
                                 //svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
-                                actual_data[rd_tx[temp_id].araddr+r_count] <= tx.rdata[rd_tx[temp_id].araddr +r_count];
-                                r_count = r_count+1;
+                                $display("aligned addr=%0d",rd_tx[temp_id].araddr);
+                                actual_data[rd_tx[temp_id].araddr+r_count] = tx.rdata[j*8 +:8];
                                 //$display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                                $display("aligned expected data=%0h || address=%0d || actual_data=%0h time=%0t",expected_data[rd_tx[temp_id].araddr+r_count],rd_tx[temp_id].araddr+r_count, tx.rdata[j*8 +:8],$time());
 
                                 if(expected_data[rd_tx[temp_id].araddr+r_count] == actual_data[rd_tx[temp_id].araddr+r_count])begin
-                                    $display("SCOREBOARD PASS");
+                                    $display("SCOREBOARD PASS || time=%0d",$time());
                                 end
+                                else begin
+                                    $display("SCOREBOARD FAIL || time=%0d",$time());
+                                end
+                                r_count = r_count+1;
                             end
                         end
 
-
+                        
                         //unaligned
                         if((rd_tx[temp_id].araddr % data_size_in_bytes) !=0)begin
-                            for(int j=offset_addr; j<(each_beat_active_bytes + offset_addr); j++)begin
+                            for(int j=offset_addr; j<(each_beat_active_bytes ); j++)begin
                                 //svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
-                                actual_data[rd_tx[temp_id].araddr+r_count] <= tx.rdata[rd_tx[temp_id].araddr +r_count];
-                                r_count = r_count+1;
+                               
+                                actual_data[rd_tx[temp_id].araddr+r_count] <= tx.rdata[j*8 +:8];
                                // $display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                                $display("unaligned expected data=%0h || address=%0d || actual_data=%0h time=%0t",expected_data[rd_tx[temp_id].araddr+r_count],rd_tx[temp_id].araddr+r_count, tx.rdata[j*8 +:8],$time());
                                 if(expected_data[rd_tx[temp_id].araddr+r_count] == actual_data[rd_tx[temp_id].araddr+r_count])begin
-                                    $display("SCOREBOARD PASS");
+                                    $display("SCOREBOARD PASS|| time=%0d",$time());
                                 end
+                                else begin
+                                    $display("SCOREBOARD FAIL|| time=%0d",$time());
+                                end
+                                r_count = r_count+1;
                             end
                         end
 
