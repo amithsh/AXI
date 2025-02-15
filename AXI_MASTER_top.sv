@@ -21,7 +21,7 @@ initial begin
 	e=new();
 	common::vif=pvif;
 	
-	common::testname = "SINGLE_WRITE_READ_TEST";
+	common::testname = "fixed_transaction";
 	e.run();
 end
 

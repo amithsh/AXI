@@ -100,6 +100,12 @@ class axi_gen;
 				tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==8; awlen==3; awsize==2; awburst==2; wid==awid; araddr==8; arlen==3; arsize==2; arburst==2;};
 				common::gen2bfm.put(tx);
 			end
+
+			"fixed_transaction":begin
+				tx=new();
+				tx.randomize() with {wr_rd==WRITE_THEN_READ; awaddr==0; awlen==3; awsize==2; awburst==0; wid==awid; araddr==0; arlen==3; arsize==2; arburst==0;};
+				common::gen2bfm.put(tx);
+			end
 		endcase
 		endtask
 endclass

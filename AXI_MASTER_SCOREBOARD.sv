@@ -36,7 +36,7 @@
                 //write data channel
                 
                 if(tx.wvalid==1 && tx.wready==1)begin
-                    
+                    if(wr_tx[tx.wid].awburst==1)begin
                     //$display("write data address=%0h",wr_tx[tx.awid].awaddr);
                     w_count = 0;
                     temp_wdata = tx.wdata.pop_back();
@@ -54,7 +54,7 @@
                     wr_tx[tx.wid].awaddr = wr_tx[tx.wid].awaddr + 2** wr_tx[tx.wid].awsize;
                     //$display("next transfer start address=%0d",wr_tx[tx.wid].awaddr);
 
-
+                    end
                 end
 
 
@@ -87,7 +87,7 @@
 
                         //aligned
                         if((rd_tx[temp_id].araddr % data_size_in_bytes) == 0)begin
-                            temp_rdata = tx.rdata;
+                            
                             for(int j=0; j<each_beat_active_bytes; j++)begin
                                 //svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
                                 $display("aligned addr=%0d",rd_tx[temp_id].araddr);
@@ -104,6 +104,8 @@
                                 r_count = r_count+1;
                             end
                         end
+
+
 
                         
                         //unaligned

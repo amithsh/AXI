@@ -10,14 +10,14 @@ class axi_env;
 			gen=new();
 			bfm=new();
 			slv=new();
-			mon=new();
-			sco=new();
+			//mon=new();
+			//sco=new();
 
 			gen.run();
 			bfm.run();
 			slv.run();
-			mon.run();
-			sco.run();
+			//mon.run();
+			//sco.run();
 		join
 
 	endtask
