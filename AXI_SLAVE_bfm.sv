@@ -158,15 +158,15 @@ forever begin
                     if(wr_tx[svif.wid].awlen==1 || wr_tx[svif.wid].awlen==3 || wr_tx[svif.wid].awlen==7 || wr_tx[svif.wid].awlen==15 ) begin
                         //3.find out the wrap boundry
                         j = wr_tx[svif.wid].awaddr / ((wr_tx[svif.wid].awlen+1) * (2 ** wr_tx[svif.wid].awsize));
-                        $display("j=%0d",j);
+                        //$display("j=%0d",j);
                         wrap_boundry_addr = j * (wr_tx[svif.wid].awlen+1 * (2 ** wr_tx[svif.wid].awsize));
                         //4.find out the upper boundry
                         upper_boundry_addr = wrap_boundry_addr + ((wr_tx[svif.wid].awlen+1) * (2 ** wr_tx[svif.wid].awsize));
-                        $display("wrap_boundry addr = %0d || upper_boundry_addr = %0d",wrap_boundry_addr,upper_boundry_addr);
+                        //$display("wrap_boundry addr = %0d || upper_boundry_addr = %0d",wrap_boundry_addr,upper_boundry_addr);
                         @(posedge svif.aclk);
                         
                         for(int i=0; i<=wr_tx[svif.wid].awlen; i++)begin
-                            $display("slave bfm WRAP TRANSACTION numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,wr_tx[svif.wid].awaddr,svif.wdata,$time);
+                            //$display("slave bfm WRAP TRANSACTION numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,wr_tx[svif.wid].awaddr,svif.wdata,$time);
                             w_count=0;
                             for(int j=0; j<data_in_bytes; j++)begin
                                 if(svif.wstrb[i]==1)begin
@@ -237,12 +237,12 @@ forever begin
                     w_count=0;
                     for(int j=0; j<data_in_bytes; j++)begin
                         mem[wr_ptr + w_count] = svif.wdata[j*8 +: 8];
-                        $display("fixed write data in mem=%0h",mem[wr_ptr + w_count]);
+                        //$display("fixed write data in mem=%0h",mem[wr_ptr + w_count]);
                         w_count = w_count+1;
                     end
 
                      wr_ptr = wr_ptr + data_in_bytes;
-                    $display("entering the response channel");
+                    //$display("entering the response channel");
                     @(posedge svif.aclk);
 
                 if(svif.awvalid ==1 )begin
@@ -285,15 +285,15 @@ forever begin
             rd_tx[svif.arid].arcache = svif.arcache;
             rd_tx[svif.arid].arlock = svif.arlock;
             rd_tx[svif.arid].arid = svif.arid;
-            $display("rid=%0d arburst=%0d",svif.arid, rd_tx[svif.arid].arburst);
+            //$display("rid=%0d arburst=%0d",svif.arid, rd_tx[svif.arid].arburst);
         end
 
         //read data channel from slave
         if(svif.rready==1)begin
             svif.rvalid =1;
             rd_tx.first(temp_id);
-            $display("temp_id=%0d time=%0t ",temp_id,$time());
-            $display("arburst=%0d time=%0t",rd_tx[temp_id].arburst,$time());
+            //$display("temp_id=%0d time=%0t ",temp_id,$time());
+            //$display("arburst=%0d time=%0t",rd_tx[temp_id].arburst,$time());
             
             
             
@@ -371,11 +371,11 @@ forever begin
                     if(rd_tx[temp_id].arlen==1 || rd_tx[temp_id].arlen==3 || rd_tx[temp_id].arlen==7 || rd_tx[temp_id].arlen==15 ) begin
                         //3.find out the wrap boundry
                         rd_j = rd_tx[temp_id].araddr / ((rd_tx[temp_id].arlen+1) * (2 ** rd_tx[temp_id].arsize));
-                        $display("j=%0d",j);
+                        //$display("j=%0d",j);
                         rd_wrap_boundry_addr = rd_j * ((rd_tx[temp_id].arlen+1) * (2 ** rd_tx[temp_id].arsize));
                         //4.find out the upper boundry
                         rd_upper_boundry_addr = rd_wrap_boundry_addr + ((rd_tx[temp_id].arlen+1) * (2 ** rd_tx[temp_id].arsize));
-                        $display("wrap_boundry addr = %0d || upper_boundry_addr = %0d",rd_wrap_boundry_addr,rd_upper_boundry_addr);
+                        //$display("wrap_boundry addr = %0d || upper_boundry_addr = %0d",rd_wrap_boundry_addr,rd_upper_boundry_addr);
                         @(posedge svif.aclk);
                         
                     for(int i=0; i<=rd_tx[temp_id].arlen; i++)begin
@@ -397,7 +397,7 @@ forever begin
                             svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
                             
                             r_count = r_count+1;
-                            $display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                            //$display("aligned read data= %0h | read address=%0d | time=%0t",   mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
                         end
                     end
 
@@ -407,10 +407,10 @@ forever begin
                         for(int j=offset_addr; j<(each_beat_active_bytes + offset_addr); j++)begin
                             svif.rdata[j*8 +: 8] <= mem[rd_tx[temp_id].araddr+r_count];
                             r_count = r_count+1;
-                            $display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
+                            //$display("unaligned read data= %0h | read address=%0d | time=%0t",  mem[rd_tx[temp_id].araddr+r_count],  rd_tx[temp_id].araddr+r_count,  $time);
                         end
                     end
-                     $display("slave bfm WRAP TRANSACTION numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,rd_tx[temp_id].araddr,svif.rdata,$time);
+                     //$display("slave bfm WRAP TRANSACTION numbber_transfer=%d start_Addr=%d wdata=%h time=%t",i,rd_tx[temp_id].araddr,svif.rdata,$time);
 
 
                    
@@ -464,11 +464,11 @@ forever begin
 	      for(int i=0; i<=rd_tx[temp_id].arlen; i++)begin 
                  	//slave need to send rdata from memory
 			data_size_in_bytes= $size(svif.rdata) /8;
-			$display("data size in bytes=%h read", data_size_in_bytes);
+			//$display("data size in bytes=%h read", data_size_in_bytes);
 			r_count=0;
 		       for(int i=0; i< data_size_in_bytes; i++)begin//wstrb=4'b1100 awsize=2 wdata size 32
 			     svif.rdata[i*8 +:8]=mem[rd_ptr+r_count];
-                 $display("fixed read data in mem=%0h",mem[rd_ptr+r_count]);
+                 //$display("fixed read data in mem=%0h",mem[rd_ptr+r_count]);
 		             r_count=r_count+1;  //count=1	  count=2	   
 		             end  
 			                        

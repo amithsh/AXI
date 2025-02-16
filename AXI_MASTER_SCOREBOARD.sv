@@ -19,6 +19,11 @@
         int offset_addr;
         int aligned_addr;
 
+        //fixed transaction related variables
+        int wr_ptr;
+        int rd_ptr;
+
+
         task run();
         vif = common::vif;
             forever begin
@@ -36,10 +41,12 @@
                 //write data channel
                 
                 if(tx.wvalid==1 && tx.wready==1)begin
-                    if(wr_tx[tx.wid].awburst==1)begin
-                    //$display("write data address=%0h",wr_tx[tx.awid].awaddr);
+                    
                     w_count = 0;
                     temp_wdata = tx.wdata.pop_back();
+                    //increment transaction
+                    if(wr_tx[tx.wid].awburst==1)begin
+                    //$display("write data address=%0h",wr_tx[tx.awid].awaddr);
                         //$display("inside for loop");
                         
                     for(int i=0; i<$size(tx.rdata)/8; i++)begin
@@ -54,6 +61,21 @@
                     wr_tx[tx.wid].awaddr = wr_tx[tx.wid].awaddr + 2** wr_tx[tx.wid].awsize;
                     //$display("next transfer start address=%0d",wr_tx[tx.wid].awaddr);
 
+                    end
+
+                    //fixed transaction write
+                    if(wr_tx[tx.wid].awburst==0)begin
+
+                        //$display("intial wr_ptr=%0d",wr_ptr);
+                        for(int i=0; i<$size(tx.rdata)/8; i++)begin
+                            if(tx.wstrb[i]==1)begin
+                                expected_data[wr_ptr + w_count] = temp_wdata[i*8 +: 8];
+                                //$display("fixed expected data=%0h address=%0d",expected_data[wr_ptr + w_count],wr_ptr+w_count);
+                                w_count = w_count+1;
+                            end
+                        end
+                        wr_ptr = wr_ptr + $size(tx.rdata)/8;
+                        //$display("after wr_ptr=%0d",wr_ptr);
                     end
                 end
 
@@ -73,10 +95,10 @@
                     //$display("SCOREBOARD entering the read data and got the read data");
                     rd_tx.first(temp_id);
                     //$display("araddr=%0d", rd_tx[temp_id].araddr);
+                    r_count = 0;
                     
                     if(rd_tx[temp_id].arburst ==1) begin
 
-                        r_count = 0;
                         //unaligned address to aligned address
                         
                         aligned_addr = rd_tx[temp_id].araddr - (rd_tx[temp_id].araddr %(2** rd_tx[temp_id].arsize));
@@ -129,8 +151,27 @@
 
                     
                         rd_tx[temp_id].araddr = aligned_addr + 2** rd_tx[temp_id].arsize;
+                    end
 
+                    //fixed transaction
+                    if(rd_tx[temp_id].arburst==0)begin
 
+                        
+                        for(int i=0; i<$size(tx.rdata)/8; i++)begin
+                            if(tx.wstrb[i]==1)begin
+                                actual_data[rd_ptr + r_count] = tx.rdata[i*8 +: 8];
+                                //$display(" expected data = %0h  || address=%0d || actual data=%0h ",expected_data[rd_ptr + r_count],rd_ptr+r_count,actual_data[rd_ptr + r_count]);
+                                if(expected_data[rd_ptr + r_count] == actual_data[rd_ptr + r_count])begin
+                                    $display("SCOREBOARD PASS || expected data = %0h  || address=%0d || actual data=%0h",expected_data[rd_ptr + r_count],rd_ptr+r_count,actual_data[rd_ptr + r_count]);
+                                end
+                                else begin
+                                    $display("SCOREBOARD FAIL || expected data = %0h  || address=%0d || actual data=%0h",expected_data[rd_ptr + r_count],rd_ptr+r_count,actual_data[rd_ptr + r_count]);
+                                end
+                                r_count = r_count+1;
+                            end
+                        end
+                        rd_ptr = rd_ptr + $size(tx.rdata)/8;
+                        
                     end
                 end
 

@@ -22,7 +22,7 @@ class axi_monitor;
 				tx.awlock = vif.awlock;
 				tx.awready = vif.awready;
 				common::mon2sco.put(tx);
-				$display("write address put time=%0t",$time());
+				//$display("write address put time=%0t",$time());
 			end
 			
 			//monitor all valid write data channel signals to tx
@@ -39,7 +39,7 @@ class axi_monitor;
 				tx.wready = vif.wready;
 				
 				common::mon2sco.put(tx);
-				$display("write data put time=%0t",$time());
+				//$display("write data put time=%0t",$time());
 
 			end
 			//monitor all valid write response signals to tx
@@ -68,7 +68,7 @@ class axi_monitor;
 				tx.arlock = vif.arlock;
 				tx.arready = vif.arready;
 				common::mon2sco.put(tx);
-				$display("read address put time=%0t arvalid=%0d arready=%0d",$time(),vif.arvalid,vif.arready);
+				//$display("read address put time=%0t arvalid=%0d arready=%0d",$time(),vif.arvalid,vif.arready);
 			end
 
 			//monitor all the valid read data channel signals to tx
@@ -84,7 +84,7 @@ class axi_monitor;
 				tx.rready = vif.rready;
 				tx.rlast = vif.rlast;
 				common::mon2sco.put(tx);
-				$display("read data put time=%0t rdata=%0h",$time(),vif.rdata);
+				//$display("read data put time=%0t rdata=%0h",$time(),vif.rdata);
 			end
 		end
 
